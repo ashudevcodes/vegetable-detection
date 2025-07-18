@@ -1,0 +1,122 @@
+{
+  "tomato": {
+    "price": 25,
+    "unit": "kg",
+    "location": "Delhi",
+    "last_updated": "2025-07-18"
+  },
+  "onion": {
+    "price": 42,
+    "unit": "kg",
+    "location": "Delhi",
+    "last_updated": "2025-07-18"
+  },
+  "potato": {
+    "price": 35,
+    "unit": "kg",
+    "location": "Delhi",
+    "last_updated": "2025-07-18"
+  },
+  "carrot": {
+    "price": 55,
+    "unit": "kg",
+    "location": "Delhi",
+    "last_updated": "2025-07-18"
+  },
+  "cauliflower": {
+    "price": 30,
+    "unit": "kg",
+    "location": "Delhi",
+    "last_updated": "2025-07-18"
+  },
+  "brinjal": {
+    "price": 40,
+    "unit": "kg",
+    "location": "Delhi",
+    "last_updated": "2025-07-18"
+  },
+  "cabbage": {
+    "price": 20,
+    "unit": "kg",
+    "location": "Delhi",
+    "last_updated": "2025-07-18"
+  },
+  "capsicum": {
+    "price": 45,
+    "unit": "kg",
+    "location": "Delhi",
+    "last_updated": "2025-07-18"
+  },
+  "cucumber": {
+    "price": 25,
+    "unit": "kg",
+    "location": "Delhi",
+    "last_updated": "2025-07-18"
+  },
+  "radish": {
+    "price": 35,
+    "unit": "kg",
+    "location": "Delhi",
+    "last_updated": "2025-07-18"
+  },
+  "beetroot": {
+    "price": 50,
+    "unit": "kg",
+    "location": "Delhi",
+    "last_updated": "2025-07-18"
+  },
+  "spinach": {
+    "price": 30,
+    "unit": "kg",
+    "location": "Delhi",
+    "last_updated": "2025-07-18"
+  },
+  "okra": {
+    "price": 60,
+    "unit": "kg",
+    "location": "Delhi",
+    "last_updated": "2025-07-18"
+  },
+  "peas": {
+    "price": 80,
+    "unit": "kg",
+    "location": "Delhi",
+    "last_updated": "2025-07-18"
+  },
+  "ginger": {
+    "price": 120,
+    "unit": "kg",
+    "location": "Delhi",
+    "last_updated": "2025-07-18"
+  },
+  "garlic": {
+    "price": 200,
+    "unit": "kg",
+    "location": "Delhi",
+    "last_updated": "2025-07-18"
+  },
+  "coriander": {
+    "price": 40,
+    "unit": "kg",
+    "location": "Delhi",
+    "last_updated": "2025-07-18"
+  },
+  "chilli": {
+    "price": 100,
+    "unit": "kg",
+    "location": "Delhi",
+    "last_updated": "2025-07-18"
+  },
+  "bell_pepper": {
+    "price": 80,
+    "unit": "kg",
+    "location": "Delhi",
+    "last_updated": "2025-07-18"
+  },
+  "corn": {
+    "price": 35,
+    "unit": "kg",
+    "location": "Delhi",
+    "last_updated": "2025-07-18"
+  }
+}

@@ -1,19 +1,30 @@
-services:
-  frontend:
-    build: ./frontend
-    ports:
-      - "5173:80"
-    depends_on:
-      - backend
 
-  backend:
-    build: ./backend
+version: '3.9'
+services:
+  python-backend:
+    build: ./backend/python
+    container_name: veg-python
+    ports:
+      - "8000:8000"
+    restart: unless-stopped
+
+  go-price-service:
+    build: ./backend/go
+    container_name: veg-go
+    ports:
+      - "9000:9000"
+    restart: unless-stopped
+
+  frontend:
+    image: node:20-alpine
+    container_name: veg-frontend
+    working_dir: /app
+    volumes:
+      - ./frontend:/app
+    command: npx serve -s /app -l 8080
     ports:
       - "8080:8080"
     depends_on:
-      - detection
-
-  detection:
-    build: ./detection
-    ports:
-      - "5000:5000"
+      - python-backend
+      - go-price-service
+    restart: unless-stopped

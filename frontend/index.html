@@ -1,17 +1,132 @@
 <!DOCTYPE html>
 <html lang="en">
-  <head>
+<head>
     <meta charset="UTF-8" />
-    <title>Object Detection</title>
-    <link rel="stylesheet" href="/styles.css" />
-  </head>
-  <body>
-    <div class="container">
-      <video id="video" autoplay playsinline></video>
-      <button id="capture">Detect Bottle</button>
-      <canvas id="canvas"></canvas>
-      <div id="results"></div>
-    </div>
-    <script type="module" src="/main.js"></script>
-  </body>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Vegetable Price Detector</title>
+    <link rel="stylesheet" href="style_1.css" />
+</head>
+<body>
+    <header class="container py-16 flex justify-between items-center">
+        <h1>Vegetable Price Detector</h1>
+        <div class="flex items-center gap-8">
+            <label for="locationSelect" class="form-label m-0">Location</label>
+            <select id="locationSelect" class="form-control" style="width:150px;"></select>
+        </div>
+    </header>
+
+    <main class="container flex flex-col gap-16">
+        <!-- Camera Section -->
+        <section id="camera-section" class="card">
+            <div class="card__body flex flex-col gap-16 items-center">
+                <video id="video" width="100%" height="480" class="block" autoplay muted playsinline></video>
+                <canvas id="canvas" width="640" height="480" class="hidden"></canvas>
+                <div class="flex gap-8">
+                    <button id="startCameraBtn" class="btn btn--primary">Start Camera</button>
+                    <button id="captureBtn" class="btn btn--secondary" disabled>Capture Image</button>
+                    <button id="detectBtn" class="btn btn--outline" disabled>Detect Vegetables</button>
+                </div>
+            </div>
+        </section>
+
+        <!-- Single Mode Toggle -->
+        <section class="flex items-center gap-8">
+            <label for="singleModeToggle" class="form-label m-0">Single Item Mode</label>
+            <input type="checkbox" id="singleModeToggle" class="form-control" style="width:auto;" />
+        </section>
+
+        <!-- Detection Results -->
+        <section id="results-section" class="card">
+            <div class="card__header flex justify-between items-center">
+                <h2>Detection Results</h2>
+                <button id="clearResultsBtn" class="btn btn--outline btn--sm">Clear All</button>
+            </div>
+            <div class="card__body">
+                <div class="table-wrapper" style="overflow-x:auto;">
+                    <table id="resultsTable" class="results-table" style="width:100%; border-collapse:collapse;">
+                        <thead>
+                            <tr>
+                                <th>Vegetable</th>
+                                <th>Quantity (kg)</th>
+                                <th>Price / kg (₹)</th>
+                                <th>Total (₹)</th>
+                                <th>Action</th>
+                            </tr>
+                        </thead>
+                        <tbody></tbody>
+                        <tfoot>
+                            <tr>
+                                <td colspan="3" style="text-align:right;font-weight:600;">Subtotal</td>
+                                <td id="resultsSubtotal">₹0</td>
+                                <td></td>
+                            </tr>
+                        </tfoot>
+                    </table>
+                </div>
+            </div>
+        </section>
+
+        <!-- Final Bill -->
+        <section id="bill-section" class="card">
+            <div class="card__header flex justify-between items-center">
+                <h2>Final Bill</h2>
+                <button id="exportBtn" class="btn btn--secondary btn--sm">Export PDF</button>
+            </div>
+            <div class="card__body">
+                <div class="table-wrapper" style="overflow-x:auto;">
+                    <table id="billTable" class="bill-table" style="width:100%; border-collapse:collapse;">
+                        <thead>
+                            <tr>
+                                <th>Vegetable</th>
+                                <th>Quantity (kg)</th>
+                                <th>Price / kg (₹)</th>
+                                <th>Total (₹)</th>
+                            </tr>
+                        </thead>
+                        <tbody></tbody>
+                        <tfoot>
+                            <tr>
+                                <td colspan="3" style="text-align:right;font-weight:600;">Grand Total</td>
+                                <td id="finalTotal">₹0</td>
+                            </tr>
+                        </tfoot>
+                    </table>
+                </div>
+            </div>
+        </section>
+
+        <!-- Contribute Prices -->
+        <section id="contribute-section" class="card">
+            <div class="card__header">
+                <h2>Contribute Prices</h2>
+            </div>
+            <div class="card__body">
+                <form id="contributeForm" class="flex flex-col gap-16">
+                    <div class="form-group">
+                        <label for="contribVeg" class="form-label">Vegetable</label>
+                        <select id="contribVeg" class="form-control"></select>
+                    </div>
+                    <div class="form-group">
+                        <label for="contribPrice" class="form-label">Price (₹ per kg)</label>
+                        <input type="number" id="contribPrice" class="form-control" min="1" step="0.1" required />
+                    </div>
+                    <div class="form-group">
+                        <label for="contribLocation" class="form-label">Location</label>
+                        <select id="contribLocation" class="form-control"></select>
+                    </div>
+                    <div class="form-group">
+                        <label for="userCode" class="form-label">Your Code</label>
+                        <input type="text" id="userCode" class="form-control" placeholder="e.g., USR123" required />
+                    </div>
+                    <button type="submit" class="btn btn--primary">Submit Price</button>
+                </form>
+            </div>
+        </section>
+    </main>
+
+    <!-- Toast -->
+    <div id="toast" class="toast hidden"></div>
+
+    <script src="./app_2.js"></script>
+</body>
 </html>

@@ -1,4 +1,0 @@
-flask
-ultralytics
-opencv-python-headless
-

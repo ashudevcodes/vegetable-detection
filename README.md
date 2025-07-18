@@ -1,18 +1,13 @@
+# Vegetable Price Detection Project – Developer Documentation
+
 ## Project Overview
+A comprehensive solution for detecting vegetables via webcam/mobile camera, retrieving current Indian market prices, calculating totals and enabling community price labelling. The stack uses:
 
-Vegetable Detection App 
+* Front-end: HTML5, CSS3 (custom design system), Vanilla JS
+* Python microservice (FastAPI) – image preprocessing, AI detection pipeline, price calc, user contributions, ML price predictions.
+* Go microservice (Mux) – ultra-fast read-only price API and write endpoint for contributions.
+* Docker / docker-compose – isolates all services.
 
----
-## Tech Stack
-
-This is a full-stack object detection application using:
-
-* **Frontend**: Vanilla JavaScript + HTML + Webcam Access
-* **Backend**: Go + Gin Framework
-* **Detection**: YOLOv8 (Ultralytics, Python + Flask)
-* **Container Runtime**: Podman/Docker + Podman-Compose/Podman-Compose
-
----
 ## Architecture
 
 ```text
@@ -29,70 +24,41 @@ This is a full-stack object detection application using:
        |--> Display results (bounding boxes etc.)
 ```
 ---
-##  Project Structure
 
-```bash
-object-detector/
-├── backend/              # Go backend API (uploads + forwards to detection)
-│   ├── main.go
-│   ├── Dockerfile
-│   └── wait-for-it.sh
-├── detection/            # YOLOv8 Flask detection service
-│   ├── detect.py
-│   └── Dockerfile
-├── frontend/             # Vanilla JS + Webcam + UI
+## Repo Structure
+```
+.
+├── docker-compose.yml            # One-command dev/prod deployment
+├── vegetable-price-detector/     # Front-end static app
 │   ├── index.html
-│   ├── main.js
-│   ├── styles.css
-│   └── Dockerfile
-├── docker-compose.yml
-├── start.sh
-└── cleanup-object-detector.sh
+│   ├── style.css
+│   └── app.js
+└── backend
+    ├── python
+    │   ├── main.py               # FastAPI root
+    │   ├── requirements.txt
+    │   ├── utils/
+    │   │   └── image_processor.py
+    │   ├── services/
+    │   │   ├── vegetable_detector.py
+    │   │   └── price_service.py
+    │   ├── schemas/
+    │   │   └── detection_schemas.py
+    │   └── Dockerfile
+    └── go
+        ├── cmd/main.go           # Go entry
+        ├── handlers/handlers.go
+        ├── models/models.go
+        ├── go.mod
+        └── Dockerfile
 ```
----
-##  How to Run the Project
 
-### 1. Run the full app
+## Quick Start
+1. Clone repo.
+2. `docker compose up --build -d`
+3. Visit `http://localhost:8080`.
 
-```bash
-cd object-detector/
-./start.sh
-```
+Python API → `http://localhost:8000/docs` (Swagger)  
+Go Price API → `http://localhost:9000/api/prices`
 
-### 2. Open the app in your browser
 
-```txt
-http://localhost:5173
-```
-
-* Allow camera access
-* Click **"Detect Bottle"**
-* The app will show bounding boxes on detected bottles
-
----
-
-##  Stop and Remove Everything
-
-```bash
-./cleanup-object-detector.sh
-
-```
----
-
-## Scripts
-
-### Reset and Rebuild the App
-
-```bash
-./reset-object-detector.sh
-```
----
-
-## ✅ Requirements
-
-* Python 3.10+, Go 1.22 (inside containers only)
-* YOLOv8 model (`ultralytics` handles download in container)
-
----
-
-> Created for educational and testing purposes. Supports real-time webcam capture and detection.
