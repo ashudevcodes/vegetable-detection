@@ -1,250 +1,523 @@
-// Enhanced detection function for real data
-async function detectVegetables() {
-	if (!imageCaptured) {
-		showToast('Please capture an image first', 'error');
+const API_BASE_URL = 'http://localhost:8000'; // Python ML service
+const PRICING_API = 'http://localhost:9000'; // Go pricing service
+
+// Global variables
+let videoEl, canvasEl, captureBtn, detectBtn, resetBtn, fileInput;
+let resultsContainer, detectionStatusEl;
+let manualEntryBtn, comparePricesBtn;
+let imageCaptured = false;
+let resultsData = [];
+let currentLocation = 'Delhi';;
+
+// Initialize application when DOM is loaded
+document.addEventListener('DOMContentLoaded', () => {
+	initializeElements();
+	bindEvents();
+	initializeTabs();
+	initializeCamera();
+	loadSupportedVegetables();
+	loadLocations();
+});;
+
+// Initialize all DOM elements
+function initializeElements() {
+	videoEl = document.getElementById('videoElement');
+	canvasEl = document.getElementById('imageCanvas');
+	captureBtn = document.getElementById('captureBtn');
+	resetBtn = document.getElementById('resetBtn');
+	fileInput = document.getElementById('fileInput');
+
+	detectBtn = document.createElement('button');
+	detectBtn.id = 'detectBtn';
+	detectBtn.textContent = 'Detect Vegetables';
+	detectBtn.className = 'btn btn--primary';
+	detectBtn.disabled = true;
+	const captureSection = document.querySelector('.capture-section .card__body');
+	captureSection.appendChild(detectBtn);
+
+	resultsContainer = document.getElementById('detectionList');
+	detectionStatusEl = document.getElementById('detectionStatus');
+
+	manualEntryBtn = document.getElementById('manualEntry');
+	comparePricesBtn = document.getElementById('comparePrices');
+
+	console.log('All elements initialized');
+}
+
+// Bind all event listeners
+function bindEvents() {
+	if (fileInput) {
+		fileInput.addEventListener('change', handleFileUpload);
+	}
+	if (captureBtn) {
+		captureBtn.addEventListener('click', captureImage);
+	}
+	if (detectBtn) {
+		detectBtn.addEventListener('click', detectVegetables);
+	}
+	if (resetBtn) {
+		resetBtn.addEventListener('click', resetDetection);
+	}
+	if (manualEntryBtn) {
+		manualEntryBtn.addEventListener('click', openManualEntry);
+	}
+	if (comparePricesBtn) {
+		comparePricesBtn.addEventListener('click', openPriceComparison);
+	}
+	console.log('Event listeners bound');
+}
+
+// Initialize camera
+function initializeCamera() {
+	if (!videoEl || !navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
+		console.warn('Camera not supported');
 		return;
 	}
+	navigator.mediaDevices.getUserMedia({ video: { facingMode: 'environment' } })
+		.then(stream => {
+			videoEl.srcObject = stream;
+			videoEl.play();
+		})
+		.catch(err => console.error('Camera error:', err));
+}
 
+// Handle file upload fallback
+function handleFileUpload(e) {
+	const file = e.target.files[0];
+	if (!file) return;
+	const reader = new FileReader();
+	reader.onload = () => {
+		const img = new Image();
+		img.onload = () => {
+			canvasEl.width = img.width;
+			canvasEl.height = img.height;
+			const ctx = canvasEl.getContext('2d');
+			ctx.drawImage(img, 0, 0);
+			imageCaptured = true;
+			detectBtn.disabled = false;
+			detectionStatusEl.textContent = 'Image ready. Click “Detect Vegetables.”';
+		};
+		img.src = reader.result;
+	};
+	reader.readAsDataURL(file);
+}
+// Capture image from camera
+function captureImage() {
+	if (!videoEl || !canvasEl) return;
+	const ctx = canvasEl.getContext('2d');
+	canvasEl.width = videoEl.videoWidth;
+	canvasEl.height = videoEl.videoHeight;
+	ctx.drawImage(videoEl, 0, 0);
+	imageCaptured = true;
+	detectBtn.disabled = false;
+	detectionStatusEl.textContent = 'Image captured. Click “Detect Vegetables.”';
+}
+
+// Main detection function
+async function detectVegetables() {
+	if (!imageCaptured) {
+		alert('Please capture or upload an image first.');
+		return;
+	}
+	detectBtn.disabled = true;
+	detectionStatusEl.textContent = 'Detecting...';
 	try {
-		showToast(' Analyzing image with AI...', 'info');
-		detectBtn.disabled = true;
-		detectBtn.textContent = 'AI Processing...';
-
-		// Convert canvas to blob
-		const blob = await new Promise(resolve => {
-			canvasEl.toBlob(resolve, 'image/jpeg', 0.8);
-		});
-
-		// Create FormData
+		const blob = await new Promise(res => canvasEl.toBlob(res, 'image/jpeg'));
 		const formData = new FormData();
-		formData.append('image', blob, 'captured_image.jpg');
+		formData.append('image', blob, 'capture.jpg');
 		formData.append('location', currentLocation);
 
-		// Send to backend for REAL detection
-		const response = await fetch(`${API_BASE_URL}/detect`, {
+		const resp = await fetch(`${API_BASE_URL}/detect`, {
 			method: 'POST',
 			body: formData
 		});
-
-		if (!response.ok) {
-			throw new Error(`Detection failed: ${response.status}`);
-		}
-
-		const detections = await response.json();
-
-		// Clear previous results
-		resultsData = [];
-		const tbody = resultsTable.querySelector('tbody');
-		tbody.innerHTML = '';
-
-		if (detections.length === 0) {
-			showToast('No vegetables detected in image', 'warning');
-			return;
-		}
-
-		let subtotal = 0;
-
-		// Process each real detection
-		for (const detection of detections) {
-			const livePrice = detection.live_price;
-			const lineTotal = detection.quantity * livePrice;
-
-			resultsData.push({
-				vegetable: detection.vegetable,
-				quantity: detection.quantity,
-				price: livePrice,
-				total: lineTotal,
-				confidence: detection.confidence,
-				source: 'real_detection'
-			});
-
-			subtotal += lineTotal;
-
-			// Add to results table with live price indicator
-			const row = document.createElement('tr');
-			row.innerHTML = `
-                <td>
-                    ${capitalizeWords(detection.vegetable)}
-                    <br><small style="color: #10b981;">🔴 Live Price</small>
-                </td>
-                <td>${detection.quantity.toFixed(2)}</td>
-                <td>
-                    ${formatCurrency(livePrice)}
-                    <br><small style="color: #666;">Real-time</small>
-                </td>
-                <td>${formatCurrency(lineTotal)}</td>
-                <td>
-                    <button onclick="addToBill('${detection.vegetable}', ${detection.quantity}, ${livePrice})" 
-                            class="btn btn--primary btn--sm">
-                        Add to Bill
-                    </button>
-                </td>
-            `;
-			tbody.appendChild(row);
-		}
-
-		resultsSubtotal.textContent = formatCurrency(subtotal);
-
-		showToast(`✅ Detected ${detections.length} vegetables with live prices!`, 'success');
-
-	} catch (error) {
-		console.error('Detection failed:', error);
-		showToast('❌ Detection failed. Please try again.', 'error');
+		if (!resp.ok) throw new Error(`Status ${resp.status}`);
+		const { detections, annotated_image } = await resp.json();
+		renderDetections(detections, annotated_image);
+	} catch (err) {
+		console.error(err);
+		detectionStatusEl.textContent = 'Detection failed.';
 	} finally {
 		detectBtn.disabled = false;
-		detectBtn.textContent = 'Detect Vegetables';
 	}
 }
 
-// Enhanced price fetching with live data
-async function getVegetablePrice(vegetable, location) {
-	try {
-		const response = await fetch(`${API_BASE_URL}/price/${vegetable}?location=${location}`);
-		if (!response.ok) {
-			throw new Error(`Price fetch failed: ${response.status}`);
-		}
-		const data = await response.json();
-		return data.price;
-	} catch (error) {
-		console.error('Failed to fetch live price:', error);
-		showToast('Using estimated price due to API error', 'warning');
-		return 30; // Fallback price
+// Display annotated image
+function displayAnnotatedImage(imageData) {
+	const imageContainer = document.getElementById('detectedVegetables')
+		|| document.querySelector('.detection-results');
+	if (imageContainer) {
+		imageContainer.innerHTML = `
+      <img 
+        src="data:image/jpeg;base64,${imageData}" 
+        alt="Annotated Vegetables" 
+        style="max-width:100%; height:auto;"
+      />
+    `;
 	}
 }
 
-// Enhanced camera function for mobile
-async function startCamera() {
-	try {
-		// Request camera with mobile-specific constraints
-		const constraints = {
-			video: {
-				width: { ideal: 640, max: 1280 },
-				height: { ideal: 480, max: 720 },
-				facingMode: 'environment', // Use back camera
-				frameRate: { ideal: 30, max: 30 }
-			}
-		};
+// Add result row to table
+function addResultRow(detection, lineTotal) {
+	if (!resultsTable) return;
 
-		stream = await navigator.mediaDevices.getUserMedia(constraints);
+	const tbody = resultsTable.querySelector('tbody');
+	const row = document.createElement('tr');
+	row.innerHTML = `
+        <td>
+            <div class="vegetable-info">
+                <span class="veg-name">${detection.vegetable}</span>
+                <span class="confidence">${(detection.confidence * 100).toFixed(1)}% sure</span>
+            </div>
+        </td>
+        <td>${detection.quantity} ${detection.unit || 'kg'}</td>
+        <td>₹${detection.price_per_kg}</td>
+        <td class="price-cell">₹${lineTotal.toFixed(2)}</td>
+        <td><span class="live-badge">LIVE</span></td>
+    `;
+	tbody.appendChild(row);
+}
 
-		// Handle mobile-specific video setup
-		videoEl.srcObject = stream;
-		videoEl.setAttribute('playsinline', true); // Important for iOS
-		videoEl.setAttribute('webkit-playsinline', true); // iOS Safari
+// Update totals
+function updateTotals(subtotal) {
+	const tax = subtotal * 0.1;
+	const total = subtotal + tax;
 
-		await videoEl.play();
+	const subtotalEl = document.getElementById('subtotal');
+	const taxEl = document.getElementById('tax');
+	const totalEl = document.getElementById('total');
 
-		startCameraBtn.disabled = true;
-		startCameraBtn.textContent = 'Camera Active';
-		captureBtn.disabled = false;
+	if (subtotalEl) subtotalEl.textContent = `₹${subtotal.toFixed(2)}`;
+	if (taxEl) taxEl.textContent = `₹${tax.toFixed(2)}`;
+	if (totalEl) totalEl.textContent = `₹${total.toFixed(2)}`;
+}
 
-		showToast('Camera started successfully', 'success');
-
-	} catch (error) {
-		console.error('Camera access failed:', error);
-
-		// Show mobile-specific error messages
-		if (error.name === 'NotAllowedError') {
-			showToast('Camera permission denied. Please allow camera access in browser settings.', 'error');
-		} else if (error.name === 'NotFoundError') {
-			showToast('No camera found on this device.', 'error');
-		} else if (error.name === 'NotSecureError') {
-			showToast('Camera requires HTTPS. Please use https:// URL.', 'error');
-		} else {
-			showToast(`Camera error: ${error.message}`, 'error');
-		}
+// Show results section
+function showResults() {
+	const resultSection = document.getElementById('detectionResults');
+	if (resultSection) {
+		resultSection.style.display = 'block';
+		resultSection.scrollIntoView({ behavior: 'smooth' });
 	}
 }
 
-// Check camera support
-function checkCameraSupport() {
-	if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
-		showToast('Camera not supported on this browser', 'error');
-		return false;
+// Location functionality
+function confirmLocation() {
+	if (locationSelect) {
+		currentLocation = locationSelect.value;
+		document.getElementById('currentLocation').textContent = currentLocation;
+		closeModal();
+		showToast(`Location set to ${currentLocation}`, 'success');
 	}
-
-	// Check for iOS Safari specific issues
-	const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent);
-	const isSafari = /^((?!chrome|android).)*safari/i.test(navigator.userAgent);
-
-	if (isIOS && isSafari) {
-		console.log('iOS Safari detected - using compatibility mode');
-		return 'ios_safari';
-	}
-
-	return true;
 }
 
-// Initialize with compatibility check
-function init() {
-	const cameraSupport = checkCameraSupport();
 
-	if (!cameraSupport) {
-		document.getElementById('camera-section').innerHTML = `
-            <div class="alert alert-warning">
-                <h3>Camera Not Supported</h3>
-                <p>Your browser doesn't support camera access. Please try:</p>
-                <ul>
-                    <li>Using Chrome or Firefox mobile browser</li>
-                    <li>Updating your browser to the latest version</li>
-                    <li>Using HTTPS instead of HTTP</li>
-                </ul>
+function updateCartDisplay() {
+	if (!cartItems) return;
+
+	cartItems.innerHTML = '';
+	let cartTotal = 0;
+
+	cartData.forEach((item, index) => {
+		cartTotal += item.total;
+
+		const cartItem = document.createElement('div');
+		cartItem.className = 'cart-item';
+		cartItem.innerHTML = `
+            <div class="cart-item-info">
+                <span class="item-name">${item.vegetable}</span>
+                <span class="item-details">${item.quantity}kg × ₹${item.price}</span>
+            </div>
+            <div class="cart-item-actions">
+                <span class="item-total">₹${item.total.toFixed(2)}</span>
+                <button class="remove-item" onclick="removeFromCart(${index})">×</button>
             </div>
         `;
-		return;
-	}
+		cartItems.appendChild(cartItem);
+	});
 
-	// Continue with normal initialization
-	loadLocations();
-	loadVegetablesList();
-	attachEventListeners();
+	if (cartTotal > 0) {
+		document.getElementById('cartTotal').textContent = `₹${cartTotal.toFixed(2)}`;
+		document.getElementById('cartCount').textContent = cartData.length;
+	}
 }
 
-// Optimize image capture for mobile
-function captureImage() {
-	if (!stream) {
-		showToast('Camera not started', 'error');
+
+
+
+function proceedToCheckout() {
+	if (cartData.length === 0) {
+		showToast('Cart is empty', 'warning');
 		return;
 	}
 
+	// Here you would integrate with payment gateway
+	showToast('Redirecting to checkout...', 'info');
+
+	// For demo purposes
+	setTimeout(() => {
+		alert('Thank you! This would redirect to payment gateway in a real app.');
+	}, 1000);
+}
+
+// Manual entry functionality
+function openManualEntry() {
+	const modal = document.getElementById('manualEntryModal');
+	if (modal) {
+		modal.style.display = 'block';
+	}
+}
+
+// Price comparison functionality
+function openPriceComparison() {
+	showToast('Loading price comparison...', 'info');
+
+	// This would show comparison across different locations
+	const comparisonData = resultsData.map(item => ({
+		vegetable: item.vegetable,
+		currentPrice: item.price,
+		locations: ['Delhi', 'Mumbai', 'Bangalore', 'Chennai'].map(loc => ({
+			location: loc,
+			price: item.price + (Math.random() - 0.5) * 10 // Mock price variation
+		}))
+	}));
+
+	// Display comparison (you'd implement the modal/UI for this)
+	console.log('Price comparison:', comparisonData);
+}
+
+// Load supported vegetables from API
+async function loadSupportedVegetables() {
 	try {
-		// Use smaller canvas size for mobile
-		const isMobile = window.innerWidth <= 768;
-		const maxWidth = isMobile ? 480 : 640;
-		const maxHeight = isMobile ? 360 : 480;
-
-		canvasEl.width = Math.min(videoEl.videoWidth, maxWidth);
-		canvasEl.height = Math.min(videoEl.videoHeight, maxHeight);
-
-		const ctx = canvasEl.getContext('2d');
-		ctx.drawImage(videoEl, 0, 0, canvasEl.width, canvasEl.height);
-
-		// Show canvas, hide video
-		canvasEl.style.display = 'block';
-		videoEl.style.display = 'none';
-
-		imageCaptured = true;
-		detectBtn.disabled = false;
-
-		showToast('Image captured successfully', 'success');
-
+		const response = await fetch(`${API_BASE_URL}/vegetables`);
+		if (response.ok) {
+			const data = await response.json();
+			console.log('Supported vegetables:', data.vegetables);
+		}
 	} catch (error) {
-		console.error('Image capture failed:', error);
-		showToast('Failed to capture image', 'error');
+		console.error('Failed to load vegetables:', error);
 	}
 }
 
-// Detect if running on mobile and adjust API URLs
-const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
-const isLocal = location.hostname === 'localhost' || location.hostname === '127.0.0.1';
-
-let API_BASE_URL, GO_API_URL;
-
-if (isMobile && isLocal) {
-	// Use computer's IP address for mobile access
-	API_BASE_URL = 'https://192.168.1.100:8000';  // Replace with your IP
-	GO_API_URL = 'https://192.168.1.100:9000';
-} else {
-	API_BASE_URL = 'http://localhost:8000';
-	GO_API_URL = 'http://localhost:9000';
+// Load supported locations from API
+async function loadLocations() {
+	try {
+		const response = await fetch(`${API_BASE_URL}/locations`);
+		if (response.ok) {
+			const data = await response.json();
+			console.log('Supported locations:', data.locations);
+		}
+	} catch (error) {
+		console.error('Failed to load locations:', error);
+	}
 }
+
+function initializeTabs() {
+	const tabBtns = document.querySelectorAll('.tab-btn');
+	const tabContents = document.querySelectorAll('.tab-content');
+	tabBtns.forEach(btn => btn.addEventListener('click', e => {
+		const target = btn.dataset.tab;
+		tabBtns.forEach(b => b.classList.toggle('active', b === btn));
+		tabContents.forEach(c => c.id === target
+			? c.classList.add('active')
+			: c.classList.remove('active'));
+	}));
+}
+
+async function initializeAnalytics() {
+	const chartCanvas = document.getElementById('priceChart');
+	if (!chartCanvas) return;
+
+	// Fetch real price history
+	let priceHistory;
+	try {
+		const res = await fetch('/api/price-history');
+		if (!res.ok) throw new Error(res.statusText);
+		priceHistory = await res.json();
+	} catch (err) {
+		console.error('Failed to load price history:', err);
+		return;
+	}
+
+	// Destroy existing chart if any
+	if (priceChart) {
+		priceChart.destroy();
+	}
+
+	// Extract labels and data arrays
+	const labels = priceHistory.map(e => e.date);
+	const tomatoData = priceHistory.map(e => e.tomato);
+	const onionData = priceHistory.map(e => e.onion);
+	const potatoData = priceHistory.map(e => e.potato);
+
+	const ctx = chartCanvas.getContext('2d');
+	priceChart = new Chart(ctx, {
+		type: 'line',
+		data: {
+			labels,
+			datasets: [
+				{
+					label: 'Tomato',
+					data: tomatoData,
+					borderColor: '#1FB8CD',
+					backgroundColor: 'rgba(31,184,205,0.1)',
+					fill: true
+				},
+				{
+					label: 'Onion',
+					data: onionData,
+					borderColor: '#FFC185',
+					backgroundColor: 'rgba(255,193,133,0.1)',
+					fill: true
+				},
+				{
+					label: 'Potato',
+					data: potatoData,
+					borderColor: '#B4413C',
+					backgroundColor: 'rgba(180,65,60,0.1)',
+					fill: true
+				}
+			]
+		},
+		options: {
+			responsive: true,
+			maintainAspectRatio: false,
+			scales: {
+				y: {
+					beginAtZero: false,
+					title: { display: true, text: 'Price (₹/kg)' }
+				}
+			},
+			plugins: {
+				title: { display: true, text: 'Vegetable Price Trends' }
+			}
+		}
+	});
+}
+
+// Reset detection for new capture
+function resetDetection() {
+	imageCaptured = false;
+	canvasEl.getContext('2d').clearRect(0, 0, canvasEl.width, canvasEl.height);
+	detectBtn.disabled = true;
+	fileInput.value = '';
+	resultsContainer.innerHTML = '';
+	detectionStatusEl.textContent = 'Ready to detect';
+}
+
+// Render detection results
+function renderDetections(detections, annotatedImage) {
+	resultsContainer.innerHTML = '';
+	if (!detections || !detections.length) {
+		resultsContainer.innerHTML = '<p>No vegetables detected.</p>';
+		detectionStatusEl.textContent = 'No vegetables found.';
+		return;
+	}
+	detections.forEach(d => {
+		const item = document.createElement('div');
+		item.className = 'detection-item';
+		item.innerHTML = `
+            <strong>${d.vegetable}</strong> — ${d.quantity}${d.unit || 'kg'} @ ₹${d.price_per_kg}/kg (${(d.confidence * 100).toFixed(1)}%)
+        `;
+		resultsContainer.appendChild(item);
+	});
+	if (annotatedImage) {
+		const img = new Image();
+		img.src = `data:image/jpeg;base64,${annotatedImage}`;
+		img.alt = 'Annotated';
+		img.className = 'annotated-image';
+		resultsContainer.appendChild(img);
+	}
+	detectionStatusEl.textContent = `Detected ${detections.length} items.`;
+}
+// Close modal functionality
+function closeModal() {
+	const modals = document.querySelectorAll('.modal');
+	modals.forEach(modal => {
+		modal.style.display = 'none';
+	});
+}
+
+// Toast notification function
+function showToast(message, type = 'info') {
+	const existingToasts = document.querySelectorAll('.toast');
+	existingToasts.forEach(toast => toast.remove());
+
+	const toast = document.createElement('div');
+	toast.className = `toast toast-${type}`;
+	toast.textContent = message;
+
+	Object.assign(toast.style, {
+		position: 'fixed',
+		top: '20px',
+		right: '20px',
+		padding: '15px 20px',
+		borderRadius: '8px',
+		color: 'white',
+		fontWeight: 'bold',
+		zIndex: '10000',
+		opacity: '0',
+		transition: 'all 0.3s ease',
+		maxWidth: '350px',
+		wordWrap: 'break-word',
+		backgroundColor: getToastColor(type),
+		boxShadow: '0 4px 15px rgba(0,0,0,0.2)'
+	});
+
+	document.body.appendChild(toast);
+
+	setTimeout(() => toast.style.opacity = '1', 100);
+
+	setTimeout(() => {
+		toast.style.opacity = '0';
+		setTimeout(() => {
+			if (toast.parentNode) {
+				toast.parentNode.removeChild(toast);
+			}
+		}, 300);
+	}, 4000);
+}
+
+function getToastColor(type) {
+	const colors = {
+		'error': '#dc3545',
+		'success': '#28a745',
+		'warning': '#ffc107',
+		'info': '#007bff'
+	};
+	return colors[type] || '#6c757d';
+}
+
+// API health check
+async function checkAPIHealth() {
+	try {
+		const response = await fetch(`${API_BASE_URL}/health`);
+		const health = await response.json();
+		console.log('API Status:', health);
+		return response.ok;
+	} catch (error) {
+		console.error('API health check failed:', error);
+		return false;
+	}
+}
+
+// Initialize health check
+setTimeout(async () => {
+	const isHealthy = await checkAPIHealth();
+	if (isHealthy) {
+		showToast('🤖 AI Detection Service Ready!', 'success');
+	} else {
+		showToast('⚠️ AI Service Unavailable', 'warning');
+	}
+}, 1000);
+
+// Export functions for global access
+window.VegetableDetector = {
+	detectVegetables,
+	captureImage,
+	resetDetection,
+	showToast,
+	initializeTabs
+};
+
+console.log('🥬 Vegetable Detection App Loaded Successfully!');

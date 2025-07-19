@@ -1,132 +1,173 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Vegetable Price Detector</title>
-    <link rel="stylesheet" href="style.css" />
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>VeggiePred - Crowdsourced Vegetable Price Prediction</title>
+    <link rel="stylesheet" href="style.css">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 </head>
 <body>
-    <header class="container py-16 flex justify-between items-center">
-        <h1>Vegetable Price Detector</h1>
-        <div class="flex items-center gap-8">
-            <label for="locationSelect" class="form-label m-0">Location</label>
-            <select id="locationSelect" class="form-control" style="width:150px;"></select>
-        </div>
-    </header>
-
-    <main class="container flex flex-col gap-16">
-        <!-- Camera Section -->
-        <section id="camera-section" class="card">
-            <div class="card__body flex flex-col gap-16 items-center">
-                <video id="video" width="100%" height="480" class="block" autoplay muted playsinline></video>
-                <canvas id="canvas" width="640" height="480" class="hidden"></canvas>
-                <div class="flex gap-8">
-                    <button id="startCameraBtn" class="btn btn--primary">Start Camera</button>
-                    <button id="captureBtn" class="btn btn--secondary" disabled>Capture Image</button>
-                    <button id="detectBtn" class="btn btn--outline" disabled>Detect Vegetables</button>
+    <div class="app-container">
+        <!-- Navigation -->
+        <nav class="navbar">
+            <div class="navbar-content">
+                <div class="navbar-brand">
+                    <h1>VeggiePred</h1>
+                    <span class="navbar-subtitle">Crowdsourced Price Prediction</span>
                 </div>
             </div>
-        </section>
+        </nav>
 
-        <!-- Single Mode Toggle -->
-        <section class="flex items-center gap-8">
-            <label for="singleModeToggle" class="form-label m-0">Single Item Mode</label>
-            <input type="checkbox" id="singleModeToggle" class="form-control" style="width:auto;" />
-        </section>
-
-        <!-- Detection Results -->
-        <section id="results-section" class="card">
-            <div class="card__header flex justify-between items-center">
-                <h2>Detection Results</h2>
-                <button id="clearResultsBtn" class="btn btn--outline btn--sm">Clear All</button>
+        <!-- Main Content -->
+        <main class="main-content">
+            <!-- Tab Navigation -->
+            <div class="tab-navigation">
+                <button class="tab-btn active" data-tab="dashboard">Dashboard</button>
+                <button class="tab-btn" data-tab="analytics">Analytics</button>
             </div>
-            <div class="card__body">
-                <div class="table-wrapper" style="overflow-x:auto;">
-                    <table id="resultsTable" class="results-table" style="width:100%; border-collapse:collapse;">
-                        <thead>
-                            <tr>
-                                <th>Vegetable</th>
-                                <th>Quantity (kg)</th>
-                                <th>Price / kg (₹)</th>
-                                <th>Total (₹)</th>
-                                <th>Action</th>
-                            </tr>
-                        </thead>
-                        <tbody></tbody>
-                        <tfoot>
-                            <tr>
-                                <td colspan="3" style="text-align:right;font-weight:600;">Subtotal</td>
-                                <td id="resultsSubtotal">₹0</td>
-                                <td></td>
-                            </tr>
-                        </tfoot>
-                    </table>
+
+            <!-- Dashboard Tab -->
+            <div class="tab-content active" id="dashboard">
+                <div class="dashboard-grid">
+                    <!-- Image Capture Section -->
+                    <div class="card capture-section">
+                        <div class="card__header">
+                            <h2>Capture Vegetable Image</h2>
+                            <p>Upload or capture vegetables to detect and submit prices</p>
+                        </div>
+                        <div class="card__body">
+                            <div class="upload-controls">
+                                <label class="btn btn--primary upload-btn">
+                                    <input type="file" id="fileInput" accept="image/*" class="sr-only">
+                                    Upload Image
+                                </label>
+                                <button class="btn btn--secondary" id="cameraBtn">Use Camera</button>
+                                <button class="btn btn--outline" id="resetBtn">Reset</button>
+                            </div>
+                            
+                            <div class="image-container">
+                                <canvas id="imageCanvas" class="image-canvas"></canvas>
+                                <video id="videoElement" class="video-element hidden" autoplay playsinline></video>
+                                <button id="captureBtn" class="btn btn--primary capture-btn hidden">Capture Photo</button>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Detection Results -->
+                    <div class="card detection-results">
+                        <div class="card__header">
+                            <h2>Detected Vegetables</h2>
+                            <div class="detection-status" id="detectionStatus">Ready to detect</div>
+                        </div>
+                        <div class="card__body">
+                            <div class="detection-list" id="detectionList">
+                                <div class="empty-state">
+                                    <div class="empty-icon">🥕</div>
+                                    <p>No vegetables detected yet</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Price Submission Form -->
+                    <div class="card price-submission">
+                        <div class="card__header">
+                            <h2>Submit Price Data</h2>
+                            <p>Help improve predictions by submitting current market prices</p>
+                        </div>
+                        <div class="card__body">
+                            <form id="priceSubmissionForm">
+                                <div class="form-group">
+                                    <label class="form-label">Vegetable</label>
+                                    <select class="form-control" id="vegetableSelect">
+                                        <option value="">Select a vegetable</option>
+                                        <option value="tomato">Tomato</option>
+                                        <option value="onion">Onion</option>
+                                        <option value="potato">Potato</option>
+                                        <option value="carrot">Carrot</option>
+                                        <option value="cabbage">Cabbage</option>
+                                    </select>
+                                </div>
+                                <div class="form-group">
+                                    <label class="form-label">Current Price (₹/kg)</label>
+                                    <input type="number" class="form-control" id="priceInput" step="0.01" min="0">
+                                </div>
+                                <div class="form-group">
+                                    <label class="form-label">Location</label>
+                                    <input type="text" class="form-control" id="locationInput" placeholder="e.g., Mumbai Central Market">
+                                </div>
+                                <div class="form-group">
+                                    <label class="form-label">Validation Code</label>
+                                    <input type="text" class="form-control" id="validationCode" placeholder="Enter validation code">
+                                    <small class="form-help">Code will be generated after image detection</small>
+                                </div>
+                                <button type="submit" class="btn btn--primary btn--full-width">Submit Price</button>
+                            </form>
+                        </div>
+                    </div>
+
+                    <!-- Price Predictions -->
+                    <div class="card price-predictions">
+                        <div class="card__header">
+                            <h2>Price Predictions</h2>
+                            <p>AI-powered price forecasts based on community data</p>
+                        </div>
+                        <div class="card__body">
+                            <div class="prediction-list" id="predictionList">
+                                <!-- Predictions will be populated here -->
+                            </div>
+                        </div>
+                    </div>
                 </div>
             </div>
-        </section>
 
-        <!-- Final Bill -->
-        <section id="bill-section" class="card">
-            <div class="card__header flex justify-between items-center">
-                <h2>Final Bill</h2>
-                <button id="exportBtn" class="btn btn--secondary btn--sm">Export PDF</button>
-            </div>
-            <div class="card__body">
-                <div class="table-wrapper" style="overflow-x:auto;">
-                    <table id="billTable" class="bill-table" style="width:100%; border-collapse:collapse;">
-                        <thead>
-                            <tr>
-                                <th>Vegetable</th>
-                                <th>Quantity (kg)</th>
-                                <th>Price / kg (₹)</th>
-                                <th>Total (₹)</th>
-                            </tr>
-                        </thead>
-                        <tbody></tbody>
-                        <tfoot>
-                            <tr>
-                                <td colspan="3" style="text-align:right;font-weight:600;">Grand Total</td>
-                                <td id="finalTotal">₹0</td>
-                            </tr>
-                        </tfoot>
-                    </table>
+
+            <!-- Analytics Tab -->
+            <div class="tab-content" id="analytics">
+                <div class="analytics-header">
+                    <h2>Market Analytics</h2>
+                    <p>Comprehensive insights into vegetable price trends and predictions</p>
+                </div>
+                
+                <div class="analytics-grid">
+                    <div class="card chart-card">
+                        <div class="card__header">
+                            <h3>Price Trends (Last 7 Days)</h3>
+                        </div>
+                        <div class="card__body">
+                            <canvas id="priceChart" style="height: 300px;"></canvas>
+                        </div>
+                    </div>
+                    
+                    <div class="card metrics-card">
+                        <div class="card__header">
+                            <h3>Prediction Accuracy</h3>
+                        </div>
+                        <div class="card__body">
+                            <div class="accuracy-metrics">
+                                <div class="metric-item">
+                                    <span class="metric-name">Tomato</span>
+                                    <span class="metric-value">85%</span>
+                                </div>
+                                <div class="metric-item">
+                                    <span class="metric-name">Onion</span>
+                                    <span class="metric-value">92%</span>
+                                </div>
+                                <div class="metric-item">
+                                    <span class="metric-name">Potato</span>
+                                    <span class="metric-value">78%</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
                 </div>
             </div>
-        </section>
 
-        <!-- Contribute Prices -->
-        <section id="contribute-section" class="card">
-            <div class="card__header">
-                <h2>Contribute Prices</h2>
-            </div>
-            <div class="card__body">
-                <form id="contributeForm" class="flex flex-col gap-16">
-                    <div class="form-group">
-                        <label for="contribVeg" class="form-label">Vegetable</label>
-                        <select id="contribVeg" class="form-control"></select>
-                    </div>
-                    <div class="form-group">
-                        <label for="contribPrice" class="form-label">Price (₹ per kg)</label>
-                        <input type="number" id="contribPrice" class="form-control" min="1" step="0.1" required />
-                    </div>
-                    <div class="form-group">
-                        <label for="contribLocation" class="form-label">Location</label>
-                        <select id="contribLocation" class="form-control"></select>
-                    </div>
-                    <div class="form-group">
-                        <label for="userCode" class="form-label">Your Code</label>
-                        <input type="text" id="userCode" class="form-control" placeholder="e.g., USR123" required />
-                    </div>
-                    <button type="submit" class="btn btn--primary">Submit Price</button>
-                </form>
-            </div>
-        </section>
-    </main>
+        <!-- Status Messages -->
+        <div id="statusMessage" class="status-message hidden"></div>
+    </div>
 
-    <!-- Toast -->
-    <div id="toast" class="toast hidden"></div>
-
-    <script src="./app.js"></script>
+    <script src="app.js"></script>
 </body>
 </html>
