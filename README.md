@@ -1,4 +1,4 @@
-# Vegetable Price Detection Project – Developer Documentation
+# Vegetable Price Detection Project
 
 ## Project Overview
 A comprehensive solution for detecting vegetables via webcam/mobile camera, retrieving current Indian market prices, calculating totals and enabling community price labelling. The stack uses:
