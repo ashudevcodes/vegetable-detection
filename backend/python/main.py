@@ -24,13 +24,15 @@ image_processor = ImageProcessor()
 
 @app.post("/detect")
 async def detect_vegetables(image: UploadFile = File(...), location: str = Form("Delhi")):
-    """Smart dummy vegetable detection with realistic results"""
+    """Smart vegetable detection with realistic results"""
     try:
         # Process image
         image_array = await image_processor.process_upload(image)
+        print(image_array)
 
         # Detect vegetables using smart dummy detector
         detections = detector.detect(image_array)
+        print(detections)
 
         # Get realistic prices for detected vegetables
         results = []
@@ -45,7 +47,7 @@ async def detect_vegetables(image: UploadFile = File(...), location: str = Form(
                 'line_total': round(detection['quantity'] * price, 2),
                 'bbox': detection['bbox'],
                 'detection_method': 'smart_dummy',
-                'timestamp': detection['timestamp']
+                'timestamp': detection['timestamp'],
             })
 
         return results
@@ -55,59 +57,59 @@ async def detect_vegetables(image: UploadFile = File(...), location: str = Form(
             status_code=500, detail=f"Detection failed: {str(e)}")
 
 
-@app.get("/vegetables")
-async def get_vegetables():
-    """Get supported vegetables"""
-    return detector.get_supported_vegetables()
-
-
-@app.get("/locations")
-async def get_locations():
-    """Get supported locations"""
-    return price_service.get_locations()
-
-
-@app.get("/price/{vegetable}")
-async def get_price(vegetable: str, location: str = "Delhi"):
-    """Get current price for vegetable"""
-    try:
-        price = price_service.get_price(vegetable, location)
-        return {
-            'vegetable': vegetable,
-            'location': location,
-            'price': price,
-            'currency': 'INR',
-            'unit': 'kg',
-            'timestamp': datetime.now().isoformat(),
-            'source': 'smart_dummy'
-        }
-    except Exception as e:
-        raise HTTPException(status_code=500, detail=str(e))
-
-
-@app.get("/market-summary/{location}")
-async def get_market_summary(location: str):
-    """Get market summary for location"""
-    try:
-        summary = price_service.get_market_summary(location)
-        return summary
-    except Exception as e:
-        raise HTTPException(status_code=500, detail=str(e))
-
-
-@app.post("/contribute")
-async def contribute_price(data: dict):
-    """Submit price contribution"""
-    try:
-        success = price_service.add_contribution(data)
-        if success:
-            return {"status": "success", "message": "Price contributed successfully"}
-        else:
-            raise HTTPException(
-                status_code=400, detail="Failed to add contribution")
-    except Exception as e:
-        raise HTTPException(status_code=500, detail=str(e))
-
+# @app.get("/vegetables")
+# async def get_vegetables():
+#     """Get supported vegetables"""
+#     return detector.get_supported_vegetables()
+#
+#
+# @app.get("/locations")
+# async def get_locations():
+#     """Get supported locations"""
+#     return price_service.get_locations()
+#
+#
+# @app.get("/price/{vegetable}")
+# async def get_price(vegetable: str, location: str = "Delhi"):
+#     """Get current price for vegetable"""
+#     try:
+#         price = price_service.get_price(vegetable, location)
+#         return {
+#             'vegetable': vegetable,
+#             'location': location,
+#             'price': price,
+#             'currency': 'INR',
+#             'unit': 'kg',
+#             'timestamp': datetime.now().isoformat(),
+#             'source': 'smart_dummy'
+#         }
+#     except Exception as e:
+#         raise HTTPException(status_code=500, detail=str(e))
+#
+#
+# @app.get("/market-summary/{location}")
+# async def get_market_summary(location: str):
+#     """Get market summary for location"""
+#     try:
+#         summary = price_service.get_market_summary(location)
+#         return summary
+#     except Exception as e:
+#         raise HTTPException(status_code=500, detail=str(e))
+#
+#
+# @app.post("/contribute")
+# async def contribute_price(data: dict):
+#     """Submit price contribution"""
+#     try:
+#         success = price_service.add_contribution(data)
+#         if success:
+#             return {"status": "success", "message": "Price contributed successfully"}
+#         else:
+#             raise HTTPException(
+#                 status_code=400, detail="Failed to add contribution")
+#     except Exception as e:
+#         raise HTTPException(status_code=500, detail=str(e))
+#
 
 @app.get("/model/info")
 async def get_model_info():
