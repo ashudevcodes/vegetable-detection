@@ -21,7 +21,7 @@ RUN pip install --upgrade pip
 COPY requirements.txt .
 
 # Install requirements first (cached unless requirements.txt changes)
-RUN pip install --no-cache-dir -r requirements.txt
+RUN pip install --no-cache-dir --resume-retries=5 -r requirements.txt
 
 # Install TensorFlow based on build argument (after requirements to avoid conflicts)
 ARG INSTALL_GPU=false

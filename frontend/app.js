@@ -2,19 +2,18 @@ const API_BASE_URL = 'http://localhost:8000'; // Python ML service
 const PRICING_API = 'http://localhost:9000'; // Go pricing service
 
 // Global variables
-let videoEl, canvasEl, captureBtn, detectBtn, resetBtn, fileInput;
+let videoEl, canvasEl, cameraBtn, captureBtn, detectBtn, resetBtn, fileInput;
 let resultsContainer, detectionStatusEl;
 let manualEntryBtn, comparePricesBtn;
 let imageCaptured = false;
 let resultsData = [];
-let currentLocation = 'Delhi';;
+let currentLocation = 'Delhi';
 
 // Initialize application when DOM is loaded
 document.addEventListener('DOMContentLoaded', () => {
 	initializeElements();
 	bindEvents();
 	initializeTabs();
-	initializeCamera();
 	loadSupportedVegetables();
 	loadLocations();
 });;
@@ -26,6 +25,7 @@ function initializeElements() {
 	captureBtn = document.getElementById('captureBtn');
 	resetBtn = document.getElementById('resetBtn');
 	fileInput = document.getElementById('fileInput');
+	cameraBtn = document.getElementById('cameraBtn');
 
 	detectBtn = document.createElement('button');
 	detectBtn.id = 'detectBtn';
@@ -51,6 +51,9 @@ function bindEvents() {
 	}
 	if (captureBtn) {
 		captureBtn.addEventListener('click', captureImage);
+	}
+	if (cameraBtn) {
+		cameraBtn.addEventListener('click', initializeCamera);
 	}
 	if (detectBtn) {
 		detectBtn.addEventListener('click', detectVegetables);
@@ -212,39 +215,6 @@ function confirmLocation() {
 }
 
 
-function updateCartDisplay() {
-	if (!cartItems) return;
-
-	cartItems.innerHTML = '';
-	let cartTotal = 0;
-
-	cartData.forEach((item, index) => {
-		cartTotal += item.total;
-
-		const cartItem = document.createElement('div');
-		cartItem.className = 'cart-item';
-		cartItem.innerHTML = `
-            <div class="cart-item-info">
-                <span class="item-name">${item.vegetable}</span>
-                <span class="item-details">${item.quantity}kg × ₹${item.price}</span>
-            </div>
-            <div class="cart-item-actions">
-                <span class="item-total">₹${item.total.toFixed(2)}</span>
-                <button class="remove-item" onclick="removeFromCart(${index})">×</button>
-            </div>
-        `;
-		cartItems.appendChild(cartItem);
-	});
-
-	if (cartTotal > 0) {
-		document.getElementById('cartTotal').textContent = `₹${cartTotal.toFixed(2)}`;
-		document.getElementById('cartCount').textContent = cartData.length;
-	}
-}
-
-
-
-
 function proceedToCheckout() {
 	if (cartData.length === 0) {
 		showToast('Cart is empty', 'warning');
@@ -289,7 +259,7 @@ function openPriceComparison() {
 // Load supported vegetables from API
 async function loadSupportedVegetables() {
 	try {
-		const response = await fetch(`${API_BASE_URL}/vegetables`);
+		const response = await fetch(`${PRICING_API}/api/vegetables`);
 		if (response.ok) {
 			const data = await response.json();
 			console.log('Supported vegetables:', data.vegetables);
@@ -302,7 +272,7 @@ async function loadSupportedVegetables() {
 // Load supported locations from API
 async function loadLocations() {
 	try {
-		const response = await fetch(`${API_BASE_URL}/locations`);
+		const response = await fetch(`${PRICING_API}/api/locations`);
 		if (response.ok) {
 			const data = await response.json();
 			console.log('Supported locations:', data.locations);
@@ -331,9 +301,10 @@ async function initializeAnalytics() {
 	// Fetch real price history
 	let priceHistory;
 	try {
-		const res = await fetch('/api/price-history');
+		const res = await fetch(`${PRICING_API}/api/price-history`);
 		if (!res.ok) throw new Error(res.statusText);
 		priceHistory = await res.json();
+		console.log(priceHistory)
 	} catch (err) {
 		console.error('Failed to load price history:', err);
 		return;
