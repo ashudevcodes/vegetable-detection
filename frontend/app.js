@@ -1,7 +1,6 @@
 const API_BASE_URL = 'http://localhost:8000'; // Python ML service
 const PRICING_API = 'http://localhost:9000'; // Go pricing service
 
-// Global variables
 let videoEl, canvasEl, cameraBtn, captureBtn, detectBtn, resetBtn, fileInput;
 let resultsContainer, detectionStatusEl;
 let manualEntryBtn, comparePricesBtn;
@@ -9,7 +8,6 @@ let imageCaptured = false;
 let resultsData = [];
 let currentLocation = 'Delhi';
 
-// Initialize application when DOM is loaded
 document.addEventListener('DOMContentLoaded', () => {
 	initializeElements();
 	bindEvents();
@@ -18,7 +16,6 @@ document.addEventListener('DOMContentLoaded', () => {
 	loadLocations();
 });;
 
-// Initialize all DOM elements
 function initializeElements() {
 	videoEl = document.getElementById('videoElement');
 	canvasEl = document.getElementById('imageCanvas');
@@ -44,7 +41,6 @@ function initializeElements() {
 	console.log('All elements initialized');
 }
 
-// Bind all event listeners
 function bindEvents() {
 	if (fileInput) {
 		fileInput.addEventListener('change', handleFileUpload);
@@ -70,7 +66,6 @@ function bindEvents() {
 	console.log('Event listeners bound');
 }
 
-// Initialize camera
 function initializeCamera() {
 	if (!videoEl || !navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
 		console.warn('Camera not supported');
@@ -84,7 +79,6 @@ function initializeCamera() {
 		.catch(err => console.error('Camera error:', err));
 }
 
-// Handle file upload fallback
 function handleFileUpload(e) {
 	const file = e.target.files[0];
 	if (!file) return;
@@ -104,7 +98,7 @@ function handleFileUpload(e) {
 	};
 	reader.readAsDataURL(file);
 }
-// Capture image from camera
+
 function captureImage() {
 	if (!videoEl || !canvasEl) return;
 	const ctx = canvasEl.getContext('2d');
@@ -116,7 +110,6 @@ function captureImage() {
 	detectionStatusEl.textContent = 'Image captured. Click “Detect Vegetables.”';
 }
 
-// Main detection function
 async function detectVegetables() {
 	if (!imageCaptured) {
 		alert('Please capture or upload an image first.');
@@ -145,7 +138,6 @@ async function detectVegetables() {
 	}
 }
 
-// Display annotated image
 function displayAnnotatedImage(imageData) {
 	const imageContainer = document.getElementById('detectedVegetables')
 		|| document.querySelector('.detection-results');
@@ -160,7 +152,6 @@ function displayAnnotatedImage(imageData) {
 	}
 }
 
-// Add result row to table
 function addResultRow(detection, lineTotal) {
 	if (!resultsTable) return;
 
@@ -181,7 +172,6 @@ function addResultRow(detection, lineTotal) {
 	tbody.appendChild(row);
 }
 
-// Update totals
 function updateTotals(subtotal) {
 	const tax = subtotal * 0.1;
 	const total = subtotal + tax;
@@ -195,7 +185,6 @@ function updateTotals(subtotal) {
 	if (totalEl) totalEl.textContent = `₹${total.toFixed(2)}`;
 }
 
-// Show results section
 function showResults() {
 	const resultSection = document.getElementById('detectionResults');
 	if (resultSection) {
@@ -204,7 +193,6 @@ function showResults() {
 	}
 }
 
-// Location functionality
 function confirmLocation() {
 	if (locationSelect) {
 		currentLocation = locationSelect.value;
@@ -221,16 +209,13 @@ function proceedToCheckout() {
 		return;
 	}
 
-	// Here you would integrate with payment gateway
 	showToast('Redirecting to checkout...', 'info');
 
-	// For demo purposes
 	setTimeout(() => {
 		alert('Thank you! This would redirect to payment gateway in a real app.');
 	}, 1000);
 }
 
-// Manual entry functionality
 function openManualEntry() {
 	const modal = document.getElementById('manualEntryModal');
 	if (modal) {
@@ -238,11 +223,9 @@ function openManualEntry() {
 	}
 }
 
-// Price comparison functionality
 function openPriceComparison() {
 	showToast('Loading price comparison...', 'info');
 
-	// This would show comparison across different locations
 	const comparisonData = resultsData.map(item => ({
 		vegetable: item.vegetable,
 		currentPrice: item.price,
@@ -252,11 +235,9 @@ function openPriceComparison() {
 		}))
 	}));
 
-	// Display comparison (you'd implement the modal/UI for this)
 	console.log('Price comparison:', comparisonData);
 }
 
-// Load supported vegetables from API
 async function loadSupportedVegetables() {
 	try {
 		const response = await fetch(`${PRICING_API}/api/vegetables`);
@@ -269,7 +250,6 @@ async function loadSupportedVegetables() {
 	}
 }
 
-// Load supported locations from API
 async function loadLocations() {
 	try {
 		const response = await fetch(`${PRICING_API}/api/locations`);
@@ -298,7 +278,6 @@ async function initializeAnalytics() {
 	const chartCanvas = document.getElementById('priceChart');
 	if (!chartCanvas) return;
 
-	// Fetch real price history
 	let priceHistory;
 	try {
 		const res = await fetch(`${PRICING_API}/api/price-history`);
@@ -310,12 +289,10 @@ async function initializeAnalytics() {
 		return;
 	}
 
-	// Destroy existing chart if any
 	if (priceChart) {
 		priceChart.destroy();
 	}
 
-	// Extract labels and data arrays
 	const labels = priceHistory.map(e => e.date);
 	const tomatoData = priceHistory.map(e => e.tomato);
 	const onionData = priceHistory.map(e => e.onion);
@@ -366,7 +343,6 @@ async function initializeAnalytics() {
 	});
 }
 
-// Reset detection for new capture
 function resetDetection() {
 	imageCaptured = false;
 	canvasEl.getContext('2d').clearRect(0, 0, canvasEl.width, canvasEl.height);
@@ -376,7 +352,6 @@ function resetDetection() {
 	detectionStatusEl.textContent = 'Ready to detect';
 }
 
-// Render detection results
 function renderDetections(detections, annotatedImage) {
 	resultsContainer.innerHTML = '';
 	if (!detections || !detections.length) {
@@ -401,7 +376,7 @@ function renderDetections(detections, annotatedImage) {
 	}
 	detectionStatusEl.textContent = `Detected ${detections.length} items.`;
 }
-// Close modal functionality
+
 function closeModal() {
 	const modals = document.querySelectorAll('.modal');
 	modals.forEach(modal => {
@@ -409,7 +384,6 @@ function closeModal() {
 	});
 }
 
-// Toast notification function
 function showToast(message, type = 'info') {
 	const existingToasts = document.querySelectorAll('.toast');
 	existingToasts.forEach(toast => toast.remove());
@@ -459,7 +433,6 @@ function getToastColor(type) {
 	return colors[type] || '#6c757d';
 }
 
-// API health check
 async function checkAPIHealth() {
 	try {
 		const response = await fetch(`${API_BASE_URL}/health`);
@@ -472,7 +445,6 @@ async function checkAPIHealth() {
 	}
 }
 
-// Initialize health check
 setTimeout(async () => {
 	const isHealthy = await checkAPIHealth();
 	if (isHealthy) {
@@ -482,7 +454,6 @@ setTimeout(async () => {
 	}
 }, 1000);
 
-// Export functions for global access
 window.VegetableDetector = {
 	detectVegetables,
 	captureImage,

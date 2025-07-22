@@ -8,7 +8,6 @@ import asyncio
 
 app = FastAPI(title="Real Vegetable Detection API", version="2.0.0")
 
-# Enable CORS
 app.add_middleware(
     CORSMiddleware,
     allow_origins=["*"],
@@ -17,8 +16,7 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-# Initialize services with real ML model
-detector = VegetableDetector()  # Now uses real YOLOv8 model
+detector = VegetableDetector()
 price_service = PriceService()
 image_processor = ImageProcessor()
 
@@ -27,19 +25,15 @@ image_processor = ImageProcessor()
 async def detect_vegetables(image: UploadFile = File(...), location: str = Form("Delhi")):
     """Real vegetable detection using YOLOv8 ML model"""
     try:
-        # Validate file type
         if not image.content_type.startswith('image/'):
             raise HTTPException(
                 status_code=400, detail="File must be an image")
 
-        # Process image
         image_array = await image_processor.process_upload(image)
 
-        # Check if model is loaded
         if not detector.model_loaded:
             raise HTTPException(status_code=503, detail="ML model not loaded")
 
-        # Run detection in thread pool to avoid blocking
         loop = asyncio.get_event_loop()
         detections = await loop.run_in_executor(None, detector.detect, image_array)
 
@@ -51,7 +45,6 @@ async def detect_vegetables(image: UploadFile = File(...), location: str = Form(
                 "total_value": 0.0
             }
 
-        # Get prices for detected vegetables
         results = []
         total_value = 0.0
 
@@ -134,14 +127,12 @@ async def health_check():
     }
 
 
-# Add startup event to warm up the model
 @app.on_event("startup")
 async def startup_event():
     """Warm up the model on startup"""
     print("Starting Real Vegetable Detection API...")
     if detector.model_loaded:
         print("✅ YOLOv8 model loaded successfully")
-        # Warm up the model with a dummy image
         import numpy as np
         dummy_image = np.zeros((640, 640, 3), dtype=np.uint8)
         _ = detector.detect(dummy_image)

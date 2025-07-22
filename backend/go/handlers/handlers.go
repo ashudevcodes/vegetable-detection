@@ -36,10 +36,8 @@ var mockPriceHistory = []PriceEntry{
 	{Date: "2025-07-19", Tomato: 36, Onion: 26, Potato: 30},
 }
 
-// GetPriceHistory handles GET /api/price-history
 func (h *PriceHandler) GetPriceHistory(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json")
-	// Encode the whole slice
 	println(mockPriceHistory)
 	if err := json.NewEncoder(w).Encode(mockPriceHistory); err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
@@ -47,7 +45,6 @@ func (h *PriceHandler) GetPriceHistory(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
-// Get price for specific vegetable
 func (h *PriceHandler) GetPrice(w http.ResponseWriter, r *http.Request) {
 	enableCORS(w)
 	if r.Method == "OPTIONS" {
@@ -79,7 +76,6 @@ func (h *PriceHandler) GetPrice(w http.ResponseWriter, r *http.Request) {
 		}
 	}
 
-	// Default fallback price
 	defaultPrice := models.PriceResponse{
 		Vegetable:   vegetable,
 		Price:       30,
@@ -93,7 +89,6 @@ func (h *PriceHandler) GetPrice(w http.ResponseWriter, r *http.Request) {
 	json.NewEncoder(w).Encode(defaultPrice)
 }
 
-// Get all prices for a location
 func (h *PriceHandler) GetAllPrices(w http.ResponseWriter, r *http.Request) {
 	enableCORS(w)
 	if r.Method == "OPTIONS" {
@@ -123,7 +118,6 @@ func (h *PriceHandler) GetAllPrices(w http.ResponseWriter, r *http.Request) {
 	json.NewEncoder(w).Encode(prices)
 }
 
-// Get market summary
 func (h *PriceHandler) GetMarketSummary(w http.ResponseWriter, r *http.Request) {
 	enableCORS(w)
 	if r.Method == "OPTIONS" {
@@ -171,7 +165,6 @@ func (h *PriceHandler) GetMarketSummary(w http.ResponseWriter, r *http.Request) 
 	json.NewEncoder(w).Encode(summary)
 }
 
-// Get supported vegetables
 func (h *PriceHandler) GetVegetables(w http.ResponseWriter, r *http.Request) {
 	enableCORS(w)
 	if r.Method == "OPTIONS" {
@@ -193,7 +186,6 @@ func (h *PriceHandler) GetVegetables(w http.ResponseWriter, r *http.Request) {
 	json.NewEncoder(w).Encode(response)
 }
 
-// Get supported locations
 func (h *PriceHandler) GetLocations(w http.ResponseWriter, r *http.Request) {
 	enableCORS(w)
 	if r.Method == "OPTIONS" {
@@ -213,7 +205,6 @@ func (h *PriceHandler) GetLocations(w http.ResponseWriter, r *http.Request) {
 	json.NewEncoder(w).Encode(response)
 }
 
-// Batch price lookup (for ML service)
 func (h *PriceHandler) GetBatchPrices(w http.ResponseWriter, r *http.Request) {
 	enableCORS(w)
 	if r.Method == "OPTIONS" {
@@ -248,7 +239,6 @@ func (h *PriceHandler) GetBatchPrices(w http.ResponseWriter, r *http.Request) {
 			}
 		}
 
-		// Default fallback
 		response = append(response, models.PriceResponse{
 			Vegetable:   vegetable,
 			Price:       30,
@@ -282,8 +272,6 @@ func enableCORS(w http.ResponseWriter) {
 	w.Header().Set("Access-Control-Allow-Methods", "GET, POST, PUT, DELETE, OPTIONS")
 	w.Header().Set("Access-Control-Allow-Headers", "Content-Type, Authorization")
 }
-
-// ... your existing initializePriceDB function ...
 
 func initializePriceDB() models.PriceDatabase {
 	return models.PriceDatabase{

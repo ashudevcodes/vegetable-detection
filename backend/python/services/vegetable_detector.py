@@ -22,19 +22,15 @@ class VegetableDetector:
         self.model = None
         self.model_loaded = False
 
-        # Load the model
         self._load_model(model_path)
 
     def _load_model(self, model_path: str = None):
         """Load YOLOv8 model for vegetable detection"""
         try:
             if model_path is None:
-                # Use pre-trained YOLO model and fine-tune class mapping
                 print("Loading pre-trained YOLOv8 model...")
-                # or yolov8s.pt, yolov8m.pt for better accuracy
                 self.model = YOLO('yolov8n.pt')
             else:
-                # Load custom trained model
                 print(f"Loading custom model from {model_path}")
                 self.model = YOLO(model_path)
 
@@ -54,10 +50,8 @@ class VegetableDetector:
             return []
 
         try:
-            # Run inference
             results = self.model(image_array, conf=self.confidence_threshold)
 
-            # Process results
             detections = self._process_yolo_results(
                 results[0], image_array.shape)
 
@@ -77,10 +71,8 @@ class VegetableDetector:
             for i, box in enumerate(boxes.data):
                 x1, y1, x2, y2, confidence, class_id = box
 
-                # Get class name
                 class_name = self.model.names[int(class_id)]
 
-                # Map detected class to our vegetable names
                 vegetable_name = self._map_class_to_vegetable(class_name)
 
                 if vegetable_name:
@@ -98,25 +90,20 @@ class VegetableDetector:
 
     def _map_class_to_vegetable(self, class_name: str) -> str:
         """Map YOLO class names to our vegetable names"""
-        # Mapping from common COCO classes to vegetables
         class_mapping = {
-            'apple': 'tomato',  # Close enough for demo
+            'apple': 'tomato',
             'orange': 'carrot',
             'banana': 'corn',
             'broccoli': 'cauliflower',
             'carrot': 'carrot',
-            # Add more mappings as needed
         }
 
-        # Direct match
         if class_name.lower() in self.vegetables:
             return class_name.lower()
 
-        # Mapped match
         if class_name.lower() in class_mapping:
             return class_mapping[class_name.lower()]
 
-        # For unknown classes, you might want to return None or handle differently
         return None
 
     def _estimate_quantity_from_bbox(self, x1: float, y1: float, x2: float, y2: float, image_shape: tuple) -> float:
@@ -125,7 +112,6 @@ class VegetableDetector:
         image_area = image_shape[0] * image_shape[1]
         relative_size = bbox_area / image_area
 
-        # Simple heuristic: larger objects = more quantity
         base_quantity = 0.1
         size_factor = relative_size * 10
 
@@ -152,25 +138,20 @@ class VegetableDetector:
             vegetable = detection['vegetable']
             confidence = detection['confidence']
 
-            # Draw bounding box
             cv2.rectangle(image, (x1, y1), (x2, y2), (0, 255, 0), 2)
 
-            # Draw label
             label = f"{vegetable}: {confidence:.2f}"
             label_size = cv2.getTextSize(
                 label, cv2.FONT_HERSHEY_SIMPLEX, 0.7, 2)[0]
 
-            # Background rectangle for text
             cv2.rectangle(image, (x1, y1 - label_size[1] - 10),
                           (x1 + label_size[0], y1), (0, 255, 0), -1)
 
-            # Text
             cv2.putText(image, label, (x1, y1 - 5),
                         cv2.FONT_HERSHEY_SIMPLEX, 0.7, (0, 0, 0), 2)
 
         return image
 
-    # Keep existing utility methods
     def get_supported_vegetables(self) -> List[str]:
         return self.vegetables.copy()
 
