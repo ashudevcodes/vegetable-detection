@@ -1,5 +1,8 @@
 # Vegetable Price Detection Project
 
+<kbd>Demo Video 👇 </kbd>
+[<img src="./assets/2025-07-22_18-54.png"/>](https://youtu.be/GNggxvi5vag)
+
 ## Project Overview
 A comprehensive solution for detecting vegetables via webcam/mobile camera, retrieving current Indian market prices, calculating totals and enabling community price labelling. The stack uses:
 
@@ -24,6 +27,11 @@ A comprehensive solution for detecting vegetables via webcam/mobile camera, retr
        |--> Display results (bounding boxes etc.)
 ```
 ---
+
+## Model APIs
+<kbd><img  src="./assets/2025-07-22_19-45.png"></kbd>
+<kbd><img src="./assets/2025-07-22_19-45_1.png"></kbd>
+<kbd><img src="./assets/2025-07-22_19-45_2.png"></kbd>
 
 ## Repo Structure
 ```
