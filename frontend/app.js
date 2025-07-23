@@ -1,5 +1,20 @@
-const API_BASE_URL = 'http://localhost:8000'; // Python ML service
-const PRICING_API = 'http://localhost:9000'; // Go pricing service
+function getBackendURLs() {
+	const isProduction = window.location.hostname !== 'localhost';
+
+	if (isProduction) {
+		return {
+			API_BASE_URL: 'https://veggimlbackend.onrender.com',
+			PRICING_API: 'https://veggigoserver.onrender.com'
+		};
+	} else {
+		return {
+			API_BASE_URL: 'http://localhost:8000',
+			PRICING_API: 'http://localhost:9000'
+		};
+	}
+}
+
+const { API_BASE_URL, PRICING_API } = getBackendURLs();
 
 let videoEl, canvasEl, cameraBtn, captureBtn, detectBtn, resetBtn, fileInput;
 let resultsContainer, detectionStatusEl;
