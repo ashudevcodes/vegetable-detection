@@ -3,7 +3,7 @@ services:
     name: python-backend
     runtime: docker
     dockerfilePath: ./backend/python/Dockerfile
-    plan: starter
+    plan: free
     envVars:
       - key: PORT
         value: 8000
