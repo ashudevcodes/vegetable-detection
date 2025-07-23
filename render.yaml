@@ -3,9 +3,7 @@ services:
     name: python-backend
     runtime: docker
     dockerfilePath: ./backend/python/Dockerfile
-    plan: free 
-    buildCommand: ""
-    startCommand: ""
+    plan: starter
     envVars:
       - key: PORT
         value: 8000
@@ -15,8 +13,6 @@ services:
     runtime: docker
     dockerfilePath: ./backend/go/Dockerfile
     plan: starter
-    buildCommand: ""
-    startCommand: ""
     envVars:
       - key: PORT
         value: 9000
@@ -24,10 +20,8 @@ services:
   - type: web
     name: frontend
     runtime: docker
-    dockerfilePath: ./frontend/Dockerfile 
+    dockerfilePath: ./frontend/Dockerfile
     plan: starter
-    buildCommand: ""
-    startCommand: "npx serve -s /app -l 8080"
     envVars:
       - key: PORT
         value: 8080
