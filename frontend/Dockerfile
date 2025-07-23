@@ -14,6 +14,7 @@ RUN if [ -f package.json ]; then npm install; fi
 # Expose port
 EXPOSE 8080
 
+RUN ls
 # This replaces the startCommand from render.yaml
 CMD ["npx", "serve", "-s", "/app", "-l", "8080"]
 
