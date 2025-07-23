@@ -3,7 +3,7 @@ WORKDIR /app
 
 COPY . .
 
-RUN ls
+RUN tree
 RUN go build -o price-service cmd/main.go
 
 # Final stage
