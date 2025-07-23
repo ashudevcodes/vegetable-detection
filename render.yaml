@@ -1,28 +1,43 @@
 services:
-  python-backend:
-    build: ./backend/python
-    container_name: veg-python
-    ports:
-      - "8000:8000"
-    restart: unless-stopped
+  - type: web
+    name: python-backend
+    runtime: docker
+    dockerfilePath: ./backend/python/Dockerfile
+    plan: free 
+    buildCommand: ""
+    startCommand: ""
+    envVars:
+      - key: PORT
+        value: 8000
 
-  go-price-service:
-    build: ./backend/go
-    container_name: veg-go
-    ports:
-      - "9000:9000"
-    restart: unless-stopped
+  - type: web
+    name: go-price-service
+    runtime: docker
+    dockerfilePath: ./backend/go/Dockerfile
+    plan: starter
+    buildCommand: ""
+    startCommand: ""
+    envVars:
+      - key: PORT
+        value: 9000
 
-  frontend:
-    image: node:20-alpine
-    container_name: veg-frontend
-    working_dir: /app
-    volumes:
-      - ./frontend:/app
-    command: npx serve -s /app -l 8080
-    ports:
-      - "8080:8080"
-    depends_on:
-      - python-backend
-      - go-price-service
-    restart: unless-stopped
+  - type: web
+    name: frontend
+    runtime: docker
+    dockerfilePath: ./frontend/Dockerfile 
+    plan: starter
+    buildCommand: ""
+    startCommand: "npx serve -s /app -l 8080"
+    envVars:
+      - key: PORT
+        value: 8080
+      - key: PYTHON_BACKEND_URL
+        fromService:
+          type: web
+          name: python-backend
+          property: host
+      - key: GO_SERVICE_URL
+        fromService:
+          type: web
+          name: go-price-service
+          property: host
