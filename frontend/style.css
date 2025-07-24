@@ -1099,6 +1099,7 @@ select.form-control {
   content: '';
   position: absolute;
   left: 0;
+  margin-left:5px;
   top: 50%;
   transform: translateY(-50%);
   width: 12px;
@@ -1131,5 +1132,9 @@ select.form-control {
   100% {
     box-shadow: 0 0 0 2px rgba(40, 167, 69, 0.2);
   }
+}
+
+#detectBtn{
+  margin-top:12px;
 }
 
