@@ -1,12 +1,9 @@
 import numpy as np
 import cv2
 from typing import List, Dict
-import json
 from datetime import datetime
 import torch
 from ultralytics import YOLO
-import requests
-from pathlib import Path
 
 
 class VegetableDetector:
