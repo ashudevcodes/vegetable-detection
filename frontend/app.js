@@ -460,12 +460,28 @@ async function checkAPIHealth() {
 	}
 }
 
+function updateModelStatus(isOnline) {
+	const modelState = document.getElementById('model-state');
+	modelState.textContent = 'offline Please wait.. :(';
+	if (isOnline) {
+		modelState.className = 'online';
+		modelState.textContent = 'Online :)';
+	} else {
+		modelState.className = 'offline';
+		modelState.textContent = 'offline Please wait.. :(';
+		showToast("we use render free instances")
+	}
+}
+
 setTimeout(async () => {
 	const isHealthy = await checkAPIHealth();
 	if (isHealthy) {
 		showToast('🤖 AI Detection Service Ready!', 'success');
+		updateModelStatus(true)
 	} else {
 		showToast('⚠️ AI Service Unavailable', 'warning');
+		updateModelStatus(false)
+
 	}
 }, 1000);
 

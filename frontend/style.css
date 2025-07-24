@@ -1088,3 +1088,48 @@ select.form-control {
     font-weight: var(--font-weight-medium);
     text-transform: capitalize;
 }
+
+#model-state {
+  position: relative;
+  padding-left: 20px;
+  transition: color 0.3s ease;
+}
+
+#model-state::before {
+  content: '';
+  position: absolute;
+  left: 0;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 12px;
+  height: 12px;
+  border-radius: 50%;
+  background-color: #dc3545;
+  transition: background-color 0.3s ease;
+  box-shadow: 0 0 0 2px rgba(220, 53, 69, 0.2);
+}
+
+#model-state.online::before {
+  background-color: #28a745;
+  box-shadow: 0 0 0 2px rgba(40, 167, 69, 0.2);
+  animation: pulse-green 2s infinite;
+}
+
+#model-state.offline::before {
+  background-color: #dc3545;
+  box-shadow: 0 0 0 2px rgba(220, 53, 69, 0.2);
+  animation: none;
+}
+
+@keyframes pulse-green {
+  0% {
+    box-shadow: 0 0 0 2px rgba(40, 167, 69, 0.2);
+  }
+  50% {
+    box-shadow: 0 0 0 6px rgba(40, 167, 69, 0);
+  }
+  100% {
+    box-shadow: 0 0 0 2px rgba(40, 167, 69, 0.2);
+  }
+}
+
